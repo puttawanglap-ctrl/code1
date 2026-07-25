@@ -1,0 +1,1042 @@
+<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมเศรษฐี มาตราตัวสะกด</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Mali', cursive;
+            margin: 0;
+            padding: 0;
+            background-color: #f4d03f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .game-board {
+            width: 1000px;
+            height: 700px;
+            background-color: #fff3e0;
+            border: 8px solid #5d4037;
+            border-radius: 20px;
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 5px;
+            padding: 10px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            background-image: 
+                linear-gradient(45deg, #ffe0b2 25%, transparent 25%, transparent 75%, #ffe0b2 75%, #ffe0b2),
+                linear-gradient(45deg, #ffe0b2 25%, transparent 25%, transparent 75%, #ffe0b2 75%, #ffe0b2);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        .center-area {
+            grid-column: 2 / 6;
+            grid-row: 2 / 4;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background-color: #ffb74d;
+            border: 4px solid #3e2723;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.5);
+            transition: transform 0.2s;
+            overflow: hidden;
+        }
+
+        .cell.corner {
+            background-color: #8d6e63;
+            color: white;
+            font-size: 1.3rem;
+        }
+
+        .cell.special {
+            background-color: #8d6e63;
+            color: white;
+        }
+
+        .cell-points {
+            font-size: 0.8rem;
+            background-color: rgba(255,255,255,0.8);
+            color: #d32f2f;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+            border: 1px solid #d32f2f;
+        }
+        
+        .special-cell-points {
+            font-size: 0.8rem;
+            background-color: rgba(0,0,0,0.5);
+            color: #ffd54f;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+
+        .icon-coin {
+            width: 30px;
+            height: 30px;
+            background-color: #ffd54f;
+            border-radius: 50%;
+            border: 2px solid #f57f17;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #f57f17;
+            font-weight: 900;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 1.2rem;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .icon-star {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .icon-mushroom {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            font-size: 1.5rem;
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5));
+        }
+
+        .player-token {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 100;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transform: translate(-50%, -50%);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 3px solid #5d4037;
+        }
+
+        .dice-btn {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Mali', cursive;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #c62828;
+            transition: all 0.1s;
+        }
+
+        .dice-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #c62828;
+        }
+
+        .dice-btn:disabled {
+            background-color: #9e9e9e;
+            box-shadow: 0 5px 0 #757575;
+            cursor: not-allowed;
+        }
+
+        .dice-display {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            border: 5px solid #ffb74d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-family: 'Mali', cursive;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: #d32f2f;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .modal-question {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Mali', cursive;
+            transition: background 0.2s;
+        }
+
+        .option-btn:hover {
+            background-color: #45a049;
+        }
+
+        .game-title {
+            position: absolute;
+            top: -20px;
+            font-size: 4rem;
+            color: #ffeb3b;
+            text-shadow: 4px 4px 0 #3e2723, -2px -2px 0 #3e2723, 2px -2px 0 #3e2723, -2px 2px 0 #3e2723;
+            font-weight: 900;
+            text-align: center;
+            z-index: 20;
+            width: 100%;
+            letter-spacing: 2px;
+        }
+
+        .game-subtitle {
+            font-size: 1.5rem;
+            color: white;
+            background: #3d2314;
+            padding: 5px 20px;
+            border-radius: 20px;
+            margin-top: -10px;
+            display: inline-block;
+        }
+        
+        .start-cell-content {
+            color: #d32f2f;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        /* Setup Screen */
+        .setup-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fce8cc;
+            background-image: radial-gradient(#f7d5a8 20%, transparent 20%),
+                              radial-gradient(#f7d5a8 20%, transparent 20%);
+            background-position: 0 0, 50px 50px;
+            background-size: 100px 100px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .setup-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 5px solid #3d2314;
+        }
+
+        .setup-title {
+            font-size: 2.5rem;
+            color: #ffca28;
+            text-shadow: 2px 2px 0 #3d2314;
+            margin-bottom: 20px;
+        }
+
+        .setup-section {
+            margin-bottom: 20px;
+        }
+
+        .setup-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: #3d2314;
+        }
+
+        .player-count-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .count-btn {
+            background-color: #f4a261;
+            color: white;
+            border: 2px solid #e76f51;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Mali', cursive;
+        }
+        
+        .count-btn.selected {
+            background-color: #e76f51;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .character-select-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .player-setup-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px dashed #ffb74d;
+        }
+
+        .char-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .char-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .char-option.selected {
+            border-color: #3d2314;
+            transform: scale(1.1);
+        }
+
+        .start-game-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Mali', cursive;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #388E3C;
+            margin-top: 20px;
+            transition: all 0.1s;
+        }
+
+        .start-game-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #388E3C;
+        }
+
+        /* Player Turn Indicator */
+        .turn-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 3px solid #3d2314;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .current-player-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .score-board {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            left: auto;
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            border: 3px solid #3d2314;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .player-score-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Setup Screen -->
+    <div class="setup-screen" id="setupScreen">
+        <div class="setup-container">
+            <h1 class="setup-title">ตั้งค่าก่อนเล่น</h1>
+            
+            <div class="setup-section">
+                <span class="setup-label">จำนวนผู้เล่น (1-4 คน)</span>
+                <div class="player-count-btns">
+                    <button class="count-btn" onclick="selectPlayerCount(1)">1 คน</button>
+                    <button class="count-btn selected" onclick="selectPlayerCount(2)" id="defaultCountBtn">2 คน</button>
+                    <button class="count-btn" onclick="selectPlayerCount(3)">3 คน</button>
+                    <button class="count-btn" onclick="selectPlayerCount(4)">4 คน</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <span class="setup-label">เลือกสีตัวละคร</span>
+                <div class="character-select-area" id="characterSelectArea">
+                    <!-- Setup rows generated here -->
+                </div>
+            </div>
+
+            <button class="start-game-btn" onclick="startGame()">เริ่มเกม!</button>
+        </div>
+    </div>
+
+    <div class="turn-indicator" id="turnIndicator" style="display: none;">
+        ตาของ: <span class="current-player-color" id="currentPlayerColorDisplay"></span> <span id="currentPlayerName">ผู้เล่น 1</span>
+    </div>
+
+    <div class="score-board" id="scoreBoard" style="display: none;">
+        <!-- Scores injected here -->
+    </div>
+
+    <div class="game-board" id="board" style="display: none;">
+        <!-- Title area in center -->
+        <div class="game-title" style="top: 10px; z-index: 15;">
+            เกมเศรษฐี<br>
+            <center><span class="game-subtitle">มาตราตัวสะกด ⭐️</span></center>
+        </div>
+
+        <!-- Center Area -->
+        <div class="center-area" style="flex-direction: column; padding-top: 80px;">
+            <!-- Mascot placeholder (Mario-like) - Made smaller to fit title -->
+            <svg class="mascot" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" style="width: 25%; margin-bottom: 20px;">
+                <!-- Hat -->
+                <path d="M 40 100 Q 100 50 160 100 Z" fill="#e52521" />
+                <path d="M 30 100 L 170 100 L 180 120 L 20 120 Z" fill="#e52521" />
+                <!-- M Logo on Hat -->
+                <circle cx="100" cy="80" r="15" fill="white" />
+                <path d="M 92 85 L 92 75 L 100 82 L 108 75 L 108 85" stroke="#e52521" stroke-width="3" fill="none" />
+                <!-- Face -->
+                <circle cx="100" cy="140" r="45" fill="#fcdbb4" />
+                <!-- Nose -->
+                <ellipse cx="100" cy="145" rx="15" ry="12" fill="#f4c29a" />
+                <!-- Mustache -->
+                <path d="M 70 155 Q 100 135 130 155 Q 135 165 125 165 Q 115 160 100 160 Q 85 160 75 165 Q 65 165 70 155 Z" fill="#111" />
+                <!-- Eyes -->
+                <ellipse cx="85" cy="125" rx="5" ry="10" fill="#111" />
+                <ellipse cx="115" cy="125" rx="5" ry="10" fill="#111" />
+                <!-- Sideburns -->
+                <path d="M 50 130 Q 40 145 55 160 Z" fill="#111" />
+                <path d="M 150 130 Q 160 145 145 160 Z" fill="#111" />
+                <!-- Body/Overalls -->
+                <path d="M 60 180 L 140 180 L 150 240 L 50 240 Z" fill="#0052a5" />
+                <!-- Shirt -->
+                <path d="M 60 180 L 140 180 L 130 200 L 70 200 Z" fill="#e52521" />
+                <!-- Buttons -->
+                <circle cx="75" cy="200" r="6" fill="#fdd835" />
+                <circle cx="125" cy="200" r="6" fill="#fdd835" />
+            </svg>
+
+            <!-- Cards Area -->
+            <div style="display: flex; gap: 20px;">
+                <!-- Treasure Chest Card -->
+                <div style="width: 140px; height: 180px; background-color: #5d4037; border-radius: 15px; border: 4px solid #ffb74d; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                    <div style="position: absolute; top: 10px; left: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    
+                    <svg viewBox="0 0 100 100" width="80" height="80">
+                        <path d="M10,40 L90,40 L85,80 L15,80 Z" fill="#d7ccc8" stroke="#3e2723" stroke-width="4"/>
+                        <path d="M10,40 Q50,10 90,40 Z" fill="#a1887f" stroke="#3e2723" stroke-width="4"/>
+                        <circle cx="50" cy="40" r="8" fill="#ffd54f" stroke="#3e2723" stroke-width="2"/>
+                        <!-- Coins -->
+                        <circle cx="30" cy="35" r="12" fill="#ffca28"/>
+                        <circle cx="45" cy="25" r="12" fill="#ffca28"/>
+                        <circle cx="65" cy="30" r="12" fill="#ffca28"/>
+                        <circle cx="75" cy="45" r="12" fill="#ffca28"/>
+                    </svg>
+                    <div style="background: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px; font-size: 0.9rem;">หีบสมบัติ</div>
+                </div>
+
+                <!-- Question Card -->
+                <div style="width: 140px; height: 180px; background-color: #5d4037; border-radius: 15px; border: 4px solid #ffb74d; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                    <div style="position: absolute; top: 10px; left: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; width: 10px; height: 10px; background: #ffb74d; border-radius: 50%;"></div>
+                    
+                    <div style="width: 80px; height: 80px; background: #ffb74d; border: 4px solid white; border-radius: 15px; display: flex; justify-content: center; align-items: center;">
+                        <span style="font-size: 3rem; color: white; font-weight: bold; text-shadow: 2px 2px 0 #d32f2f;">?</span>
+                    </div>
+                    <div style="background: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 15px; font-size: 0.9rem;">บัตรคำถาม</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cells will be generated by JS -->
+        
+        <!-- Player Tokens Container -->
+        <div id="playersContainer"></div>
+    </div>
+
+    <div class="controls" id="controls" style="display: none;">
+        <button class="dice-btn" onclick="rollDice()" id="rollBtn">ทอยลูกเต๋า</button>
+        <div class="dice-display" id="diceResult">6</div>
+    </div>
+
+    <!-- Question Modal -->
+    <div class="modal-overlay" id="questionModal">
+        <div class="modal-content">
+            <div class="modal-title">คำถามมาตราตัวสะกด</div>
+            <div class="modal-question">คำว่า <span id="qWord" style="color: #e53935; font-weight: bold; font-size: 2rem;"></span><br>อยู่ในมาตราใด?</div>
+            <div class="options-grid" id="qOptions">
+                <!-- Options injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal (Chance/Chest/Alerts) -->
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal-content">
+            <div class="modal-title" id="msgTitle">แจ้งเตือน</div>
+            <div class="modal-question" id="msgText">ข้อความ</div>
+            <button class="option-btn" onclick="closeMessageModal()" id="msgOkBtn" style="margin-top: 15px; width: 100%;">ตกลง</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Setup Logic ---
+        let numPlayers = 2;
+        const availableColors = [
+            { id: 'red', hex: '#e53935', name: 'แดง' },
+            { id: 'blue', hex: '#1e88e5', name: 'น้ำเงิน' },
+            { id: 'green', hex: '#43a047', name: 'เขียว' },
+            { id: 'yellow', hex: '#fdd835', name: 'เหลือง', text: 'black' },
+            { id: 'purple', hex: '#8e24aa', name: 'ม่วง' },
+            { id: 'orange', hex: '#fb8c00', name: 'ส้ม' }
+        ];
+        
+        let playerSetups = [
+            { id: 1, colorId: 'red' },
+            { id: 2, colorId: 'blue' }
+        ];
+
+        function selectPlayerCount(count) {
+            numPlayers = count;
+            
+            // Update buttons
+            document.querySelectorAll('.count-btn').forEach((btn, index) => {
+                if (index + 1 === count) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+
+            // Adjust playerSetups array
+            if (playerSetups.length < count) {
+                for (let i = playerSetups.length; i < count; i++) {
+                    // Find an unused color
+                    const usedColors = playerSetups.map(p => p.colorId);
+                    const freeColor = availableColors.find(c => !usedColors.includes(c.id)) || availableColors[0];
+                    playerSetups.push({ id: i + 1, colorId: freeColor.id });
+                }
+            } else if (playerSetups.length > count) {
+                playerSetups = playerSetups.slice(0, count);
+            }
+
+            renderCharacterSelection();
+        }
+
+        function renderCharacterSelection() {
+            const area = document.getElementById('characterSelectArea');
+            area.innerHTML = '';
+
+            playerSetups.forEach((player, index) => {
+                const row = document.createElement('div');
+                row.className = 'player-setup-row';
+                
+                const label = document.createElement('span');
+                label.innerText = `ผู้เล่น ${player.id}:`;
+                label.style.fontWeight = 'bold';
+                
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'char-options';
+
+                availableColors.forEach(color => {
+                    const colorBtn = document.createElement('div');
+                    colorBtn.className = `char-option ${player.colorId === color.id ? 'selected' : ''}`;
+                    colorBtn.style.backgroundColor = color.hex;
+                    if(color.text) colorBtn.style.color = color.text;
+                    colorBtn.innerText = 'P' + player.id;
+                    
+                    colorBtn.onclick = () => {
+                        // Check if color is already taken by someone else
+                        const existingPlayerWithColor = playerSetups.find(p => p.colorId === color.id && p.id !== player.id);
+                        if (existingPlayerWithColor) {
+                            // Swap colors
+                            existingPlayerWithColor.colorId = player.colorId;
+                        }
+                        player.colorId = color.id;
+                        renderCharacterSelection();
+                    };
+                    
+                    optionsDiv.appendChild(colorBtn);
+                });
+
+                row.appendChild(label);
+                row.appendChild(optionsDiv);
+                area.appendChild(row);
+            });
+        }
+
+        // --- Game Logic ---
+        let players = [];
+        let currentPlayerIndex = 0;
+
+        function startGame() {
+            // Initialize players based on setup
+            players = playerSetups.map(setup => {
+                const colorObj = availableColors.find(c => c.id === setup.colorId);
+                return {
+                    id: setup.id,
+                    name: `ผู้เล่น ${setup.id}`,
+                    color: colorObj.hex,
+                    textColor: colorObj.text || 'white',
+                    position: 0,
+                    score: 0,
+                    elementId: `player-${setup.id}`
+                };
+            });
+
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('board').style.display = 'grid';
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('turnIndicator').style.display = 'flex';
+            document.getElementById('scoreBoard').style.display = 'flex';
+
+            renderBoard();
+            createPlayerTokens();
+            updateScoreBoard();
+            updateTurnIndicator();
+        }
+
+        function createPlayerTokens() {
+            const container = document.getElementById('playersContainer');
+            container.innerHTML = '';
+            
+            players.forEach((p, index) => {
+                const token = document.createElement('div');
+                token.id = p.elementId;
+                token.className = 'player-token';
+                token.style.backgroundColor = p.color;
+                token.style.color = p.textColor;
+                token.innerText = `P${p.id}`;
+                
+                // Slightly offset tokens so they don't perfectly overlap
+                token.style.marginTop = `${(index % 2) * 10}px`;
+                token.style.marginLeft = `${Math.floor(index / 2) * 10}px`;
+                
+                container.appendChild(token);
+            });
+            
+            // Wait for elements to be rendered before calculating positions
+            setTimeout(updateAllPlayerPositions, 50);
+        }
+
+        function updateScoreBoard() {
+            const board = document.getElementById('scoreBoard');
+            board.innerHTML = '<div style="margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">คะแนน</div>';
+            
+            players.forEach(p => {
+                const line = document.createElement('div');
+                line.className = 'player-score-line';
+                line.innerHTML = `
+                    <div style="width: 15px; height: 15px; border-radius: 50%; background-color: ${p.color};"></div>
+                    <span>P${p.id}: ${p.score}</span>
+                `;
+                board.appendChild(line);
+            });
+        }
+
+        function updateTurnIndicator() {
+            const cp = players[currentPlayerIndex];
+            document.getElementById('currentPlayerColorDisplay').style.backgroundColor = cp.color;
+            document.getElementById('currentPlayerName').innerText = cp.name;
+        }
+
+        // --- Existing Board Data ---
+        const boardData = [
+            { text: "START", type: "corner", gridArea: "4/6" }, // 0
+            { text: "เรือใบ", type: "word", pts: 1, gridArea: "4/5", answer: "แม่ ก กา" }, // 1
+            { text: "วัคซีน", type: "word", pts: 5, gridArea: "4/4", answer: "แม่ กน" }, // 2
+            { text: "อาหาร", type: "word", pts: 2, gridArea: "4/3", answer: "แม่ กน" }, // 3
+            { text: "โกรธ", type: "word", pts: 5, gridArea: "4/2", answer: "แม่ กด" }, // 4
+            { text: "ระฆัง", type: "word", pts: 1, gridArea: "4/1", answer: "แม่ กง" }, // 5
+            
+            { text: "บัตรคำถาม", type: "special", gridArea: "3/1" }, // 6
+            { text: "วาฬ", type: "word", pts: 2, gridArea: "2/1", answer: "แม่ กน" }, // 7
+            
+            { text: "หีบสมบัติ", type: "special", gridArea: "1/1" }, // 8
+            { text: "ร่างกาย", type: "word", pts: 1, gridArea: "1/2", answer: "แม่ เกย" }, // 9
+            { text: "เหรียญ", type: "word", pts: 5, gridArea: "1/3", answer: "แม่ กน" }, // 10
+            { text: "ก้อนหิน", type: "word", pts: 2, gridArea: "1/4", answer: "แม่ กน" }, // 11
+            { text: "มะม่วง", type: "word", pts: 5, gridArea: "1/5", answer: "แม่ กง" }, // 12
+            
+            { text: "บัตรคำถาม", type: "special", gridArea: "1/6" }, // 13
+            { text: "พิมพ์", type: "word", pts: 1, gridArea: "2/6", answer: "แม่ กม" }, // 14
+            { text: "มงกุฎ", type: "word", pts: 5, gridArea: "3/6", answer: "แม่ กด" }  // 15
+        ];
+
+        let isMoving = false;
+        const totalCells = 16;
+
+        const allMatra = ["แม่ ก กา", "แม่ กก", "แม่ กง", "แม่ กด", "แม่ กน", "แม่ กบ", "แม่ กม", "แม่ เกย", "แม่ เกอว"];
+
+        function renderBoard() {
+            const board = document.getElementById('board');
+            // Remove existing cells
+            board.querySelectorAll('.cell').forEach(e => e.remove());
+
+            boardData.forEach((cellData, index) => {
+                const cellEl = document.createElement('div');
+                cellEl.className = `cell ${cellData.type}`;
+                cellEl.style.gridArea = cellData.gridArea;
+                
+                let contentHTML = '';
+                
+                if (index === 0) {
+                    contentHTML = `
+                        <div class="start-cell-content">START!</div>
+                        <div class="icon-coin">$</div>
+                    `;
+                } else if (cellData.type === 'special') {
+                    if(cellData.text === "หีบสมบัติ") {
+                        contentHTML = `
+                            <div>${cellData.text}</div>
+                            <div class="icon-star">✨</div>
+                        `;
+                    } else {
+                        contentHTML = `
+                            <div>${cellData.text}</div>
+                            <div class="icon-star">⭐</div>
+                        `;
+                    }
+                } else {
+                    contentHTML = `
+                        <div>${cellData.text}</div>
+                        <div class="cell-points">+ ${cellData.pts} คะแนน</div>
+                        <div class="icon-coin">$</div>
+                    `;
+                }
+
+                cellEl.innerHTML = contentHTML;
+                cellEl.id = `cell-${index}`;
+                board.appendChild(cellEl);
+            });
+        }
+
+        function updateAllPlayerPositions() {
+            players.forEach(p => updateSinglePlayerPosition(p));
+        }
+
+        function updateSinglePlayerPosition(player) {
+            const cell = document.getElementById(`cell-${player.position}`);
+            const token = document.getElementById(player.elementId);
+            
+            if (cell && token) {
+                const rect = cell.getBoundingClientRect();
+                const boardRect = document.getElementById('board').getBoundingClientRect();
+                
+                // Calculate position relative to the board
+                let top = rect.top - boardRect.top + (rect.height / 2);
+                let left = rect.left - boardRect.left + (rect.width / 2);
+
+                // Add slight offset based on player ID to avoid total overlap
+                const offsetX = (player.id % 2 === 0 ? 10 : -10);
+                const offsetY = (player.id > 2 ? 10 : -10);
+                
+                token.style.top = `${top + offsetY}px`;
+                token.style.left = `${left + offsetX}px`;
+            }
+        }
+
+        window.addEventListener('resize', updateAllPlayerPositions);
+
+        function rollDice() {
+            if (isMoving) return;
+            
+            isMoving = true;
+            document.getElementById('rollBtn').disabled = true;
+            
+            const result = Math.floor(Math.random() * 6) + 1;
+            const diceDisplay = document.getElementById('diceResult');
+            
+            // Animation effect
+            let rolls = 0;
+            const rollInterval = setInterval(() => {
+                diceDisplay.innerText = Math.floor(Math.random() * 6) + 1;
+                rolls++;
+                if (rolls > 10) {
+                    clearInterval(rollInterval);
+                    diceDisplay.innerText = result;
+                    moveCurrentPlayer(result);
+                }
+            }, 50);
+        }
+
+        function moveCurrentPlayer(steps) {
+            let stepsTaken = 0;
+            const currentPlayer = players[currentPlayerIndex];
+            
+            const moveInterval = setInterval(() => {
+                currentPlayer.position = (currentPlayer.position + 1) % totalCells;
+                updateSinglePlayerPosition(currentPlayer);
+                stepsTaken++;
+                
+                // Check if passed start (only if not currently landing on it)
+                if (currentPlayer.position === 0 && stepsTaken < steps) {
+                    addScoreToCurrent(2); // Pass start bonus
+                    // Show a quick toast or let it be silent? Let's keep it silent to not interrupt movement
+                }
+                
+                if (stepsTaken >= steps) {
+                    clearInterval(moveInterval);
+                    setTimeout(() => {
+                        handleCellAction(currentPlayer.position);
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        function handleCellAction(position) {
+            const cellData = boardData[position];
+            const cp = players[currentPlayerIndex];
+            
+            if (position === 0) {
+                showMessage("จุดเริ่มต้น", `${cp.name} ตกจุดเริ่มต้น รับไปเลย 2 คะแนน!`);
+                addScoreToCurrent(2);
+                // endTurn called inside closeMessageModal
+            } else if (cellData.text === "บัตรคำถาม") {
+                drawCard('chance');
+            } else if (cellData.text === "หีบสมบัติ") {
+                drawCard('chest');
+            } else {
+                // Word cell
+                askMatraQuestion(cellData);
+            }
+        }
+
+        let pendingQuestionPoints = 0;
+
+        function askMatraQuestion(cellData) {
+            const actualWord = boardData.find(w => w.text === cellData.text);
+            if(!actualWord) { endTurn(); return; } // fallback
+
+            const correctAnswer = actualWord.answer;
+            pendingQuestionPoints = cellData.pts;
+            
+            document.getElementById('qWord').innerText = cellData.text;
+            
+            // Generate options
+            let options = [correctAnswer];
+            let availableWrong = allMatra.filter(m => m !== correctAnswer);
+            
+            // Pick 3 random wrong answers
+            for(let i=0; i<3; i++) {
+                const randIdx = Math.floor(Math.random() * availableWrong.length);
+                options.push(availableWrong[randIdx]);
+                availableWrong.splice(randIdx, 1);
+            }
+            
+            // Shuffle
+            options.sort(() => Math.random() - 0.5);
+            
+            const qOptions = document.getElementById('qOptions');
+            qOptions.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, correctAnswer, cellData.pts);
+                qOptions.appendChild(btn);
+            });
+            
+            document.getElementById('questionModal').style.display = 'flex';
+        }
+
+        function checkAnswer(selected, correct, points) {
+            document.getElementById('questionModal').style.display = 'none';
+            const cp = players[currentPlayerIndex];
+
+            if (selected === correct) {
+                showMessage("ถูกต้อง!", `เก่งมาก ${cp.name}! คุณได้รับ ${points} คะแนน`);
+                addScoreToCurrent(points);
+            } else {
+                showMessage("ผิดจ้า!", `คำตอบที่ถูกคือ ${correct} <br>${cp.name} ไม่ได้คะแนนนะจ๊ะ`);
+            }
+        }
+
+        function drawCard(type) {
+            const cp = players[currentPlayerIndex];
+
+            if (type === 'chest') {
+                const points = Math.floor(Math.random() * 5) + 1;
+                showMessage("หีบสมบัติ!", `${cp.name} เจอสมบัติ! รับไปเลย ${points} คะแนนฟรีๆ`);
+                addScoreToCurrent(points);
+            } else if (type === 'chance') {
+                const events = [
+                    { msg: "ตอบคำถามคุณครูได้ดี รับไปเลย 2 คะแนน", pts: 2 },
+                    { msg: "ช่วยเพื่อนทำความสะอาดห้อง รับไปเลย 1 คะแนน", pts: 1 },
+                    { msg: "ลืมทำการบ้าน โดนหัก 1 คะแนน", pts: -1 },
+                    { msg: "เดินสะดุดล้ม พัก 1 ตา (แต่เกมนี้ไม่มีระบบพักตา ให้ -1 แทน)", pts: -1 }
+                ];
+                const evt = events[Math.floor(Math.random() * events.length)];
+                
+                showMessage("บัตรคำถาม", `${evt.msg}`);
+                addScoreToCurrent(evt.pts);
+            }
+        }
+
+        function showMessage(title, text) {
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerHTML = text;
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+            if (isMoving) endTurn();
+        }
+
+        function addScoreToCurrent(points) {
+            players[currentPlayerIndex].score += points;
+            // Prevent negative score
+            if(players[currentPlayerIndex].score < 0) players[currentPlayerIndex].score = 0;
+            updateScoreBoard();
+        }
+
+        function endTurn() {
+            // Next player turn
+            currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
+            updateTurnIndicator();
+            
+            isMoving = false;
+            document.getElementById('rollBtn').disabled = false;
+        }
+
+        // Initialize setup screen
+        window.onload = () => {
+            selectPlayerCount(2); // Default to 2 players
+        };
+    </script>
+</body>
+</html>
